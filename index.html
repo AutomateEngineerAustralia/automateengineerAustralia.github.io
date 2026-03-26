@@ -1,1 +1,632 @@
+<!doctype html>
+<html lang="es" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cornejo Logic</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #081426;
+      --surface: #0f1d33;
+      --surface2: #162743;
+      --accent: #caa24d;
+      --accent-dim: #8b6a24;
+      --text-primary: #f6f7f9;
+      --text-secondary: #a8b2c1;
+      --border: #223554;
+      --step-line: #caa24d;
+    }
 
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    .page-wrapper {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Typography */
+    .font-display { font-family: 'Fraunces', serif; }
+
+    /* Noise texture overlay */
+    .noise-bg {
+      position: relative;
+    }
+    .noise-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+    .noise-bg > * { position: relative; z-index: 1; }
+
+    /* Hero gradient */
+    .hero-gradient {
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(47,129,247,0.18) 0%, transparent 70%), var(--bg);
+    }
+
+    /* Grid lines background */
+    .grid-lines {
+      background-image:
+        linear-gradient(rgba(47,129,247,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(47,129,247,0.06) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    /* Nav */
+    nav {
+      border-bottom: 1px solid var(--border);
+      background: rgba(13,17,23,0.85);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(47,129,247,0.1);
+      border: 1px solid rgba(47,129,247,0.25);
+      border-radius: 999px;
+      padding: 4px 14px;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 12px 28px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 0 20px rgba(47,129,247,0.25);
+    }
+    .btn-primary:hover {
+      background: #4191ff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 30px rgba(47,129,247,0.35);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 0.9rem;
+      padding: 11px 28px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      background: rgba(47,129,247,0.06);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      border-color: rgba(47,129,247,0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+
+    /* Step connector */
+    .step-connector {
+      width: 2px;
+      background: linear-gradient(to bottom, var(--accent), transparent);
+      margin: 0 auto;
+      height: 40px;
+    }
+
+    /* Step card */
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .step-card:hover { border-color: rgba(47,129,247,0.4); }
+
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    /* Section divider */
+    .section-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* Contact form area */
+    .contact-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    /* Animate on scroll */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Stat chips */
+    .stat-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 20px;
+      text-align: center;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(47,129,247,0.2); }
+      50% { box-shadow: 0 0 40px rgba(47,129,247,0.45); }
+    }
+    .pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="page-wrapper"><!-- NAV -->
+   <nav>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <img src="logo.png" alt="Cornejo Logic logo" style="height:44px; width:auto;">
+      <span class="font-display" style="font-size:1.05rem; font-weight:600; color:var(--text-primary);">
+        Cornejo<span style="color:var(--accent);">Logic</span>
+      </span>
+    </div>
+     <div style="display:flex; align-items:center; gap:28px;"><a href="#why" style="color:var(--text-secondary); text-decoration:none; font-size:0.88rem; font-weight:500; transition:color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">Why Us</a> <a href="#how" style="color:var(--text-secondary); text-decoration:none; font-size:0.88rem; font-weight:500; transition:color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">How It Works</a> <a href="#contact" style="color:var(--text-secondary); text-decoration:none; font-size:0.88rem; font-weight:500; transition:color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">Contact</a> <button class="btn-primary" style="padding:8px 20px; font-size:0.85rem;" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Discovery Call</button>
+     </div>
+    </div>
+   </nav><!-- HERO -->
+   <section class="hero-gradient grid-lines noise-bg" style="padding: 100px 24px 90px;">
+    <div style="max-width:800px; margin:0 auto; text-align:center;">
+     <div class="badge" style="margin-bottom:24px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;"></span> Microsoft Automation for SMEs
+     </div>
+     <h1 id="hero-title" class="font-display fade-in" style="font-size:clamp(2.2rem,5vw,3.6rem); font-weight:700; line-height:1.15; letter-spacing:-0.03em; margin:0 0 20px; color:var(--text-primary);">Process Improvement &amp;<br><em style="color:var(--accent); font-style:italic;">Microsoft Automation</em></h1>
+     <p id="hero-subtitle" class="fade-in" style="font-size:1.05rem; color:var(--text-secondary); line-height:1.75; max-width:620px; margin:0 auto 36px; font-weight:300;">I help businesses reduce rework, improve process reliability, and make better use of operational data through practical Microsoft-based solutions.</p>
+     <div class="fade-in" style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;"><button id="cta-primary" class="btn-primary pulse-glow" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})"> Request a Discovery Call </button> <button id="cta-secondary" class="btn-secondary" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})"> See How It Works </button>
+     </div><!-- Stats -->
+     <div class="fade-in" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:60px; max-width:520px; margin-left:auto; margin-right:auto;">
+      <div class="stat-chip">
+       <div style="font-size:1.4rem; font-weight:700; color:var(--accent); font-family:'Fraunces',serif;">
+        Process
+       </div>
+       <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">
+        First Approach
+       </div>
+      </div>
+      <div class="stat-chip">
+       <div style="font-size:1.4rem; font-weight:700; color:var(--accent); font-family:'Fraunces',serif;">
+        M365
+       </div>
+       <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">
+        Native Tools
+       </div>
+      </div>
+      <div class="stat-chip">
+       <div style="font-size:1.4rem; font-weight:700; color:var(--accent); font-family:'Fraunces',serif;">
+        SME
+       </div>
+       <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">
+        Focused
+       </div>
+      </div>
+     </div>
+    </div>
+   </section>
+   <hr class="section-divider"><!-- TOOLS STRIP -->
+   <section style="background:var(--surface); padding:20px 24px;">
+    <div style="max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:center; gap:32px; flex-wrap:wrap;"><span style="font-size:0.75rem; color:var(--text-secondary); letter-spacing:0.08em; text-transform:uppercase; font-weight:500;">Built with</span>
+     <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:center;"><span style="color:var(--text-secondary); font-size:0.85rem; font-weight:500;">Power Automate</span> <span style="color:var(--border);">·</span> <span style="color:var(--text-secondary); font-size:0.85rem; font-weight:500;">Power Apps</span> <span style="color:var(--border);">·</span> <span style="color:var(--text-secondary); font-size:0.85rem; font-weight:500;">Dynamics 365</span> <span style="color:var(--border);">·</span> <span style="color:var(--text-secondary); font-size:0.85rem; font-weight:500;">SharePoint</span> <span style="color:var(--border);">·</span> <span style="color:var(--text-secondary); font-size:0.85rem; font-weight:500;">SQL</span>
+     </div>
+    </div>
+   </section>
+   <hr class="section-divider"><!-- WHY SECTION -->
+   <section id="why" style="padding:90px 24px;">
+    <div style="max-width:1000px; margin:0 auto;">
+     <div style="text-align:center; margin-bottom:56px;">
+      <div class="badge" style="margin-bottom:16px;">
+       Why Cornejo Logic
+      </div>
+      <h2 id="section-why-title" class="font-display fade-in" style="font-size:clamp(1.8rem,3.5vw,2.6rem); font-weight:700; letter-spacing:-0.03em; margin:0 0 16px;">What makes my approach different</h2>
+      <p class="fade-in" style="font-size:0.95rem; color:var(--text-secondary); max-width:500px; margin:0 auto; line-height:1.7;">Rather than focusing only on tools, I start by understanding the process itself — its inputs, outputs, bottlenecks, and common sources of error.</p>
+     </div>
+     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:20px;">
+      <div class="card fade-in" style="padding:28px;">
+       <div style="width:44px;height:44px;background:rgba(47,129,247,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;"><i data-lucide="layers" style="width:22px;height:22px;color:var(--accent);"></i>
+       </div>
+       <h3 style="font-size:1rem;font-weight:600;margin:0 0 10px;color:var(--text-primary);">Process-first, not tool-first</h3>
+       <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.65;margin:0;">I focus on the real business problem before deciding which tool should be used.</p>
+      </div>
+      <div class="card fade-in" style="padding:28px;">
+       <div style="width:44px;height:44px;background:rgba(47,129,247,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;"><i data-lucide="refresh-ccw" style="width:22px;height:22px;color:var(--accent);"></i>
+       </div>
+       <h3 style="font-size:1rem;font-weight:600;margin:0 0 10px;color:var(--text-primary);">Designed to reduce rework</h3>
+       <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.65;margin:0;">I identify repeated admin effort, misunderstandings, and process gaps that create inefficiency.</p>
+      </div>
+      <div class="card fade-in" style="padding:28px;">
+       <div style="width:44px;height:44px;background:rgba(47,129,247,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;"><i data-lucide="wrench" style="width:22px;height:22px;color:var(--accent);"></i>
+       </div>
+       <h3 style="font-size:1rem;font-weight:600;margin:0 0 10px;color:var(--text-primary);">Built for practical use</h3>
+       <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.65;margin:0;">The goal is not just automation, but a workflow the business can actually use and maintain.</p>
+      </div>
+      <div class="card fade-in" style="padding:28px;">
+       <div style="width:44px;height:44px;background:rgba(47,129,247,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;"><i data-lucide="bar-chart-2" style="width:22px;height:22px;color:var(--accent);"></i>
+       </div>
+       <h3 style="font-size:1rem;font-weight:600;margin:0 0 10px;color:var(--text-primary);">Data-aware implementation</h3>
+       <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.65;margin:0;">I help structure process data to better support internal reporting and KPI tracking.</p>
+      </div>
+     </div>
+    </div>
+   </section>
+   <hr class="section-divider"><!-- HOW IT WORKS -->
+   <section id="how" style="padding:90px 24px; background:radial-gradient(ellipse 60% 50% at 50% 100%, rgba(47,129,247,0.07) 0%, transparent 70%), var(--bg);">
+    <div style="max-width:680px; margin:0 auto;">
+     <div style="text-align:center; margin-bottom:56px;">
+      <div class="badge" style="margin-bottom:16px;">
+       Workflow Approach
+      </div>
+      <h2 id="section-how-title" class="font-display fade-in" style="font-size:clamp(1.8rem,3.5vw,2.6rem); font-weight:700; letter-spacing:-0.03em; margin:0 0 16px;">How it works</h2>
+      <p class="fade-in" style="font-size:0.95rem; color:var(--text-secondary); line-height:1.7; margin:0;">A structured, four-step approach that goes from understanding the problem to ongoing support after deployment.</p>
+     </div><!-- Steps -->
+     <div style="display:flex; flex-direction:column; gap:0;"><!-- Step 1 -->
+      <div class="step-card fade-in" style="padding:28px 32px; display:flex; gap:20px; align-items:flex-start;">
+       <div class="step-number">
+        1
+       </div>
+       <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:1.2rem;">🔍</span>
+         <h3 style="font-size:1rem;font-weight:600;margin:0;color:var(--text-primary);">Process Review</h3>
+        </div>
+        <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7;margin:0;">I meet with the client to understand the process in detail, identify manual bottlenecks, unclear handovers, and common sources of error.</p>
+       </div>
+      </div>
+      <div class="step-connector"></div><!-- Step 2 -->
+      <div class="step-card fade-in" style="padding:28px 32px; display:flex; gap:20px; align-items:flex-start;">
+       <div class="step-number">
+        2
+       </div>
+       <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:1.2rem;">🧭</span>
+         <h3 style="font-size:1rem;font-weight:600;margin:0;color:var(--text-primary);">Solution Design</h3>
+        </div>
+        <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7;margin:0;">I design a practical Microsoft-based solution using the tools already available in the client's environment wherever possible.</p>
+       </div>
+      </div>
+      <div class="step-connector"></div><!-- Step 3 -->
+      <div class="step-card fade-in" style="padding:28px 32px; display:flex; gap:20px; align-items:flex-start;">
+       <div class="step-number">
+        3
+       </div>
+       <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:1.2rem;">⚙️</span>
+         <h3 style="font-size:1rem;font-weight:600;margin:0;color:var(--text-primary);">Build and Testing</h3>
+        </div>
+        <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7;margin:0;">I build the automation, test the logic, and adjust the workflow based on real business requirements.</p>
+       </div>
+      </div>
+      <div class="step-connector"></div><!-- Step 4 -->
+      <div class="step-card fade-in" style="padding:28px 32px; display:flex; gap:20px; align-items:flex-start;">
+       <div class="step-number">
+        4
+       </div>
+       <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:1.2rem;">🛡️</span>
+         <h3 style="font-size:1rem;font-weight:600;margin:0;color:var(--text-primary);">Support and Maintenance</h3>
+        </div>
+        <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7;margin:0;">After deployment, I provide monitoring, troubleshooting, and support — because real-world process variations and exceptions often emerge after implementation.</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section>
+
+   <!-- SERVICE AND PRINCING -->
+   <section id="services" style="padding:72px 24px; background:var(--bg); border-top:1px solid var(--border);">
+  <div style="max-width:1000px; margin:0 auto;">
+    <div class="fade-in" style="margin-bottom:28px;">
+      <p style="font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:10px;">Services & Pricing</p>
+      <h2 class="font-display" style="font-size:clamp(2rem,4vw,3rem); margin:0 0 14px; color:var(--text-primary);">Practical services for process improvement and automation</h2>
+      <p style="max-width:780px; color:var(--text-secondary);">
+        Projects are priced based on scope, complexity, and business requirements. The examples below are starting points for smaller business engagements.
+      </p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px;">
+      <div class="card fade-in" style="padding:24px;">
+        <h3 style="margin-top:0; color:var(--text-primary);">Discovery / Process Review</h3>
+        <p style="font-size:1.4rem; font-weight:700; color:var(--accent); margin:8px 0;">A$250</p>
+        <p style="color:var(--text-secondary);">A focused review of one business process, including an initial discussion, high-level assessment, and a recommendation on whether the process can be improved or automated.</p>
+      </div>
+
+      <div class="card fade-in" style="padding:24px;">
+        <h3 style="margin-top:0; color:var(--text-primary);">Starter Automation</h3>
+        <p style="font-size:1.4rem; font-weight:700; color:var(--accent); margin:8px 0;">A$950</p>
+        <p style="color:var(--text-secondary);">Best for one simple workflow such as approvals, reminders, notifications, or a small internal admin process. Includes basic testing and one round of small adjustments.</p>
+      </div>
+
+      <div class="card fade-in" style="padding:24px;">
+        <h3 style="margin-top:0; color:var(--text-primary);">Business Workflow</h3>
+        <p style="font-size:1.4rem; font-weight:700; color:var(--accent); margin:8px 0;">A$1,900</p>
+        <p style="color:var(--text-secondary);">Designed for more connected processes involving approvals, notifications, SharePoint actions, or internal workflow logic. Includes testing, refinement, and short implementation notes.</p>
+      </div>
+
+      <div class="card fade-in" style="padding:24px;">
+        <h3 style="margin-top:0; color:var(--text-primary);">Advanced Workflow / CRM / Portal</h3>
+        <p style="font-size:1.4rem; font-weight:700; color:var(--accent); margin:8px 0;">From A$3,800</p>
+        <p style="color:var(--text-secondary);">For more complex solutions involving Dynamics 365, Power Pages, multi-step logic, document movement, or broader operational workflow design.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:42px;" class="fade-in">
+      <h3 style="color:var(--text-primary); margin-bottom:18px;">Support Plans</h3>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px;">
+        <div class="card" style="padding:24px;">
+          <h4 style="margin-top:0; color:var(--text-primary);">Basic</h4>
+          <p style="font-size:1.3rem; font-weight:700; color:var(--accent);">A$300/month</p>
+          <p style="color:var(--text-secondary);">Up to 2 support hours per month. Ideal for businesses with a small number of simple automations.</p>
+        </div>
+        <div class="card" style="padding:24px;">
+          <h4 style="margin-top:0; color:var(--text-primary);">Standard</h4>
+          <p style="font-size:1.3rem; font-weight:700; color:var(--accent);">A$650/month</p>
+          <p style="color:var(--text-secondary);">Up to 5 support hours per month. Includes monitoring, minor fixes, reviews, and small updates.</p>
+        </div>
+        <div class="card" style="padding:24px;">
+          <h4 style="margin-top:0; color:var(--text-primary);">Advanced</h4>
+          <p style="font-size:1.3rem; font-weight:700; color:var(--accent);">A$1,200/month</p>
+          <p style="color:var(--text-secondary);">Up to 10 support hours per month. Ideal for businesses with multiple connected workflows or more active automation environments.</p>
+        </div>
+      </div>
+      <p style="margin-top:16px; color:var(--text-secondary);">Additional support: <span style="color:var(--text-primary); font-weight:600;">A$95/hour</span>. Unused hours do not roll over. New builds and major changes are quoted separately.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SUPPORT AND MAINTNANCE-->
+<section style="padding:72px 24px; background:var(--surface); border-top:1px solid var(--border);">
+  <div style="max-width:1000px; margin:0 auto;" class="fade-in">
+    <p style="font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:10px;">Support & Maintenance</p>
+    <h2 class="font-display" style="font-size:clamp(2rem,4vw,3rem); margin:0 0 16px; color:var(--text-primary);">Why support is necessary</h2>
+    <p style="max-width:860px; color:var(--text-secondary); margin-bottom:16px;">
+      Business automations are not always “set and forget”. Over time, flows can be affected by changes in business rules, connector behaviour, permissions, disabled accounts, data variations, or Microsoft platform updates.
+    </p>
+    <p style="max-width:860px; color:var(--text-secondary); margin-bottom:16px;">
+      Ongoing support helps with monitoring, troubleshooting, fixing failed runs, adjusting logic, updating actions, and maintaining ownership and stability when operational changes happen.
+    </p>
+    <p style="max-width:860px; color:var(--text-secondary);">
+      In practice, support often means reviewing alerts, correcting broken steps, updating flow actions, and resolving issues before they disrupt the business process.
+    </p>
+  </div>
+</section>
+
+<!-- CUSTOMER REQUIREMENT -->
+<section style="padding:72px 24px; background:var(--bg); border-top:1px solid var(--border);">
+  <div style="max-width:1000px; margin:0 auto;" class="fade-in">
+    <p style="font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:10px;">Client Requirements</p>
+    <h2 class="font-display" style="font-size:clamp(2rem,4vw,3rem); margin:0 0 16px; color:var(--text-primary);">What clients need to provide</h2>
+    <div style="display:grid; gap:14px; color:var(--text-secondary); max-width:880px;">
+      <p>Clients should already have the relevant Microsoft 365 environment and licences required for the solution they want to implement.</p>
+      <p>To ensure continuity, ownership, and proper governance, automations should be built inside the client’s own Microsoft environment rather than under a personal account.</p>
+      <p>For this reason, clients are expected to provide a business account or service account under their domain for implementation, ownership transfer, and long-term operational use.</p>
+      <p>That account should be treated as an ongoing operational account and should not be disabled after deployment, because disabling the connected account can cause automations to fail.</p>
+      <p>Where required, ownership and key actions should be transferred to the client’s designated operational account so the solution remains within the client’s own system.</p>
+    </div>
+  </div>
+</section>
+
+   <hr class="section-divider"><!-- CONTACT -->
+   <section id="contact" style="padding:90px 24px 80px;">
+    <div style="max-width:720px; margin:0 auto;">
+     <div class="contact-panel fade-in" style="padding:clamp(28px,5vw,56px);">
+      <div style="margin-bottom:36px;">
+       <div class="badge" style="margin-bottom:16px;">
+        Contact
+       </div>
+       <h2 id="contact-title" class="font-display" style="font-size:clamp(1.6rem,3vw,2.2rem); font-weight:700; letter-spacing:-0.03em; margin:0 0 12px; color:var(--text-primary);">Let's discuss your process</h2>
+       <p style="font-size:0.95rem; color:var(--text-secondary); line-height:1.75; margin:0; max-width:560px;">If your business is dealing with repeated admin work, unclear approvals, disconnected data, or underused Microsoft tools — I can help assess whether the process can be improved or automated.</p>
+      </div>
+      <form id="contact-form" action="https://formspree.io/f/xdapovzr" method="POST" style="display:grid; gap:18px;">
+       <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div>
+          <label for="name" style="display:block;font-size:0.8rem;font-weight:500;color:var(--text-secondary);margin-bottom:6px;letter-spacing:0.04em;text-transform:uppercase;">Name</label>
+          <input id="name" name="name" type="text" placeholder="Jane Smith" required style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:11px 14px;color:var(--text-primary);font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;transition:border-color 0.2s;">
+        </div>
+
+        <div>
+          <label for="company" style="display:block;font-size:0.8rem;font-weight:500;color:var(--text-secondary);margin-bottom:6px;letter-spacing:0.04em;text-transform:uppercase;">Company Name</label>
+          <input id="company" name="company" type="text" placeholder="Your company name" required style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:11px 14px;color:var(--text-primary);font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;transition:border-color 0.2s;">
+        </div>
+
+        <div>
+          <label for="email" style="display:block;font-size:0.8rem;font-weight:500;color:var(--text-secondary);margin-bottom:6px;letter-spacing:0.04em;text-transform:uppercase;">Work Email</label>
+          <input id="email" name="email" type="email" placeholder="jane@company.com" required style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:11px 14px;color:var(--text-primary);font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;transition:border-color 0.2s;">
+        </div>
+         
+         <div>
+           <label for="message" style="display:block;font-size:0.8rem;font-weight:500;color:var(--text-secondary);margin-bottom:6px;letter-spacing:0.04em;text-transform:uppercase;">Message</label>
+           <textarea id="message" name="message" placeholder="Tell me about the process you want to improve or automate" rows="6" required style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:11px 14px;color:var(--text-primary);font-size:0.9rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;transition:border-color 0.2s;"></textarea>
+         </div>
+
+         <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:14px;">
+           Initial enquiries are handled by email first. Virtual meetings are available by appointment.
+         </p>
+        <!-- Inline success message (hidden by default) -->
+       <div id="form-success" style="display:none; background:rgba(47,129,247,0.1); border:1px solid rgba(47,129,247,0.3); border-radius:8px; padding:16px 20px; display:flex; align-items:center; gap:12px;"><i data-lucide="check-circle" style="width:20px;height:20px;color:var(--accent);flex-shrink:0;"></i>
+        <div>
+         <p style="margin:0;font-size:0.9rem;font-weight:600;color:var(--text-primary);">Message received</p>
+         <p style="margin:4px 0 0;font-size:0.82rem;color:var(--text-secondary);">Thank you — I'll be in touch within one business day.</p>
+        </div>
+       </div><button type="submit" id="submit-btn" class="btn-primary" style="width:100%; padding:14px; font-size:0.95rem;"> Request a Discovery Call </button>
+      </form>
+     </div>
+    </div>
+  
+   </section><!-- FOOTER -->
+   <footer style="border-top:1px solid var(--border); background:var(--surface); padding:28px 24px;">
+    <div style="max-width:1000px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;"><span class="font-display" style="font-size:1rem; font-weight:600; color:var(--text-primary);"> Cornejo<span style="color:var(--accent);">Logic</span> </span> <span style="font-size:0.8rem; color:var(--text-secondary);">Process Improvement &amp; Microsoft Automation for SMEs</span> <span style="font-size:0.8rem; color:var(--text-secondary);">© 2025 Cornejo Logic</span>
+    </div>
+   </footer>
+  </div>
+  <script>
+  // Lucide icons
+  lucide.createIcons();
+
+  // Scroll animations
+  const fadeEls = document.querySelectorAll('.fade-in');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.12 });
+  fadeEls.forEach(el => observer.observe(el));
+
+  // Element SDK
+  const defaultConfig = {
+    hero_title: 'Process Improvement & Microsoft Automation',
+    hero_subtitle: 'I help businesses reduce rework, improve process reliability, and make better use of operational data through practical Microsoft-based solutions.',
+    cta_primary: 'Request a Discovery Call',
+    cta_secondary: 'See How It Works',
+    section_why_title: 'What makes my approach different',
+    section_how_title: 'How it works',
+    contact_title: "Let's discuss your process"
+  };
+
+  window.elementSdk && window.elementSdk.init({
+    defaultConfig,
+    onConfigChange: async (config) => {
+      const get = (key) => config[key] || defaultConfig[key];
+
+      // Hero title (strip HTML for safety since it contains special chars)
+      const heroTitle = document.getElementById('hero-title');
+      if (heroTitle) {
+        heroTitle.innerHTML = get('hero_title').replace('&', '&amp;');
+      }
+
+      const heroSub = document.getElementById('hero-subtitle');
+      if (heroSub) heroSub.textContent = get('hero_subtitle');
+
+      const ctaPrimary = document.getElementById('cta-primary');
+      if (ctaPrimary) ctaPrimary.textContent = get('cta_primary');
+
+      const ctaSecondary = document.getElementById('cta-secondary');
+      if (ctaSecondary) ctaSecondary.textContent = get('cta_secondary');
+
+      const whyTitle = document.getElementById('section-why-title');
+      if (whyTitle) whyTitle.textContent = get('section_why_title');
+
+      const howTitle = document.getElementById('section-how-title');
+      if (howTitle) howTitle.textContent = get('section_how_title');
+
+      const contactTitle = document.getElementById('contact-title');
+      if (contactTitle) contactTitle.textContent = get('contact_title');
+    },
+    mapToCapabilities: (config) => ({
+      recolorables: [
+        {
+          get: () => config.background_color || '#0D1117',
+          set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); }
+        },
+        {
+          get: () => config.accent_color || '#2F81F7',
+          set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); }
+        },
+        {
+          get: () => config.surface_color || '#161B22',
+          set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }
+        },
+        {
+          get: () => config.text_primary || '#E6EDF3',
+          set: (v) => { config.text_primary = v; window.elementSdk.setConfig({ text_primary: v }); }
+        },
+        {
+          get: () => config.text_secondary || '#8B949E',
+          set: (v) => { config.text_secondary = v; window.elementSdk.setConfig({ text_secondary: v }); }
+        }
+      ],
+      borderables: [],
+      fontEditable: {
+        get: () => config.font_family || 'DM Sans',
+        set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+      },
+      fontSizeable: {
+        get: () => config.font_size || 16,
+        set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+      }
+    }),
+    mapToEditPanelValues: (config) => new Map([
+      ['hero_title', config.hero_title || defaultConfig.hero_title],
+      ['hero_subtitle', config.hero_subtitle || defaultConfig.hero_subtitle],
+      ['cta_primary', config.cta_primary || defaultConfig.cta_primary],
+      ['cta_secondary', config.cta_secondary || defaultConfig.cta_secondary],
+      ['section_why_title', config.section_why_title || defaultConfig.section_why_title],
+      ['section_how_title', config.section_how_title || defaultConfig.section_how_title],
+      ['contact_title', config.contact_title || defaultConfig.contact_title],
+    ])
+  });
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e253b38f584b1da',t:'MTc3NDUxODQxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
