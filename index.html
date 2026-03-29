@@ -653,6 +653,20 @@
             <button type="submit" id="submit-btn" class="btn-primary" style="width:100%; padding:14px; font-size:0.95rem;">
               Request a Discovery Call
             </button>
+            <div id="form-success" style="display:none; margin-top:18px; padding:18px 20px; border:1px solid rgba(202,162,77,0.35); background:rgba(202,162,77,0.08); border-radius:12px; color:var(--text-primary);">
+  <div style="display:flex; align-items:flex-start; gap:12px;">
+    <div style="width:28px; height:28px; border-radius:50%; background:rgba(202,162,77,0.18); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;">
+      <span style="color:var(--accent); font-size:0.95rem;">✓</span>
+    </div>
+    <div>
+      <p style="margin:0 0 6px; font-weight:600; color:var(--accent);">Thank you.</p>
+      <p style="margin:0; color:var(--text-primary); line-height:1.7;">
+        Your enquiry has been sent successfully. I’ll get back to you within one business day.
+      </p>
+    </div>
+  </div>
+</div>
+
           </form>
         </div>
       </div>
@@ -672,20 +686,74 @@
       </div>
     </footer>
   </div>
+<script>
+  lucide.createIcons();
 
-  <script>
-    lucide.createIcons();
+  const fadeEls = document.querySelectorAll('.fade-in');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.12 });
 
-    const fadeEls = document.querySelectorAll('.fade-in');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible');
+  fadeEls.forEach(el => observer.observe(el));
+
+  const form = document.getElementById('contact-form');
+  const submitBtn = document.getElementById('submit-btn');
+  const successBox = document.getElementById('form-success');
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    successBox.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    submitBtn.style.opacity = '0.7';
+
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch(form.action, {
+        method: form.method,
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
         }
       });
-    }, { threshold: 0.12 });
 
-    fadeEls.forEach(el => observer.observe(el));
-  </script>
+      if (response.ok) {
+        form.reset();
+        successBox.style.display = 'block';
+        successBox.animate(
+          [
+            { opacity: 0, transform: 'translateY(14px)' },
+            { opacity: 1, transform: 'translateY(0)' }
+          ],
+          {
+            duration: 450,
+            easing: 'ease-out',
+            fill: 'forwards'
+          }
+        );
+
+        successBox.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      } else {
+        alert('Something went wrong. Please try again.');
+      }
+    } catch (error) {
+      alert('Something went wrong. Please try again.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Request a Discovery Call';
+      submitBtn.style.opacity = '1';
+    }
+  });
+</script>
+
 </body>
 </html>
